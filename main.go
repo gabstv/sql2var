@@ -1,10 +1,11 @@
 package main
 
 import (
-	"strings"
-	"github.com/mkideal/cli"
-	"bufio"
+	"log"
 	"os"
+	"strings"
+
+	"github.com/mkideal/cli"
 )
 
 type argT struct {
@@ -38,7 +39,15 @@ func main() {
 	})
 }
 
-func extractall(inputfiles []string, m map[string]string){
+func extractall(inputfiles []string, m map[string]string) {
 	invar := false
 	var lvar string
+	for _, fname := range inputfiles {
+		fp, err := os.Open(fname)
+		if err != nil {
+			log.Println("could not open", fname, err.Error())
+			continue
+		}
+		//bufio.
+	}
 }
