@@ -1,5 +1,12 @@
---begin:stmt1
+-- define:stmt1
 SELECT *
 FROM a
 WHERE b=?
---end:stmt1
+--end
+
+-- define:stmt2
+SELECT a, b, c
+FROM table1
+JOIN table2 ON a=b
+ORDER BY c DESC
+-- end
