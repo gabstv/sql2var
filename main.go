@@ -60,8 +60,9 @@ func main() {
 		} else {
 			source = os.Getenv("GOFILE")
 		}
-		sqlfns := make(map[string]string)
-		extractall(inputs, sqlfns)
+		sqlk := make([]string, 0)
+		sqlv := make([]string, 0)
+		extractall(inputs, &sqlk, &sqlv)
 		//
 		if args.Package == "" {
 			args.Package = os.Getenv("GOPACKAGE")
@@ -80,15 +81,15 @@ func main() {
 		eb.WriteString("\n\npackage ")
 		eb.WriteString(args.Package)
 		eb.WriteString("\n\n")
-		for k, v := range sqlfns {
-			eb.WriteString(fmt.Sprintf("const %s = %q\n", k, v))
+		for k := range sqlk {
+			eb.WriteString(fmt.Sprintf("const %s = %q\n", sqlk[k], sqlv[k]))
 		}
 		eb.Flush()
 		return nil
 	})
 }
 
-func extractall(inputfiles []string, m map[string]string) {
+func extractall(inputfiles []string, mk, mv *[]string) {
 	for _, fname := range inputfiles {
 		fp, err := os.Open(fname)
 		if err != nil {
@@ -137,7 +138,8 @@ func extractall(inputfiles []string, m map[string]string) {
 						if invar {
 							//fmt.Println("[PUSH", lvar.String(), "]")
 							// push everything
-							m[lvar.String()] = lcontent.String()
+							*mk = append(*mk, lvar.String())
+							*mv = append(*mv, lcontent.String())
 							invar = false
 							incomment = false
 							lvar.Reset()
