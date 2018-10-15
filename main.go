@@ -62,7 +62,8 @@ func main() {
 		}
 		sqlk := make([]string, 0)
 		sqlv := make([]string, 0)
-		extractall(inputs, &sqlk, &sqlv)
+		sqltags := make([][]string, 0)
+		extractall(inputs, &sqlk, &sqlv, &sqltags)
 		//
 		if args.Package == "" {
 			args.Package = os.Getenv("GOPACKAGE")
@@ -82,14 +83,24 @@ func main() {
 		eb.WriteString(args.Package)
 		eb.WriteString("\n\n")
 		for k := range sqlk {
-			eb.WriteString(fmt.Sprintf("const %s = %q\n", sqlk[k], sqlv[k]))
+			skipit := false
+			if len(sqltags[k]) > 0 {
+				for _, vv := range sqltags[k] {
+					if vv == "skip" {
+						skipit = true
+					}
+				}
+			}
+			if !skipit {
+				eb.WriteString(fmt.Sprintf("const %s = %q\n", sqlk[k], sqlv[k]))
+			}
 		}
 		eb.Flush()
 		return nil
 	})
 }
 
-func extractall(inputfiles []string, mk, mv *[]string) {
+func extractall(inputfiles []string, mk, mv *[]string, mtags *[][]string) {
 	for _, fname := range inputfiles {
 		fp, err := os.Open(fname)
 		if err != nil {
@@ -104,6 +115,7 @@ func extractall(inputfiles []string, mk, mv *[]string) {
 		var lcontent bytes.Buffer
 		var rprev, rnow rune
 		var lcomment bytes.Buffer
+		lasttags := make([]string, 0)
 		r := bufio.NewReader(fp)
 		hasEOF := false
 		for !hasEOF {
@@ -145,7 +157,16 @@ func extractall(inputfiles []string, mk, mv *[]string) {
 						}
 						lcomment.Reset()
 					} else if strings.HasPrefix(lc, "define:") && !invar {
-						lvar.WriteString(lc[7:])
+						rawt := strings.Split(strings.TrimSpace(lc[7:]), ";")
+						lvar.WriteString(rawt[0])
+						if len(rawt) > 1 {
+							for k, v := range rawt {
+								if k == 0 {
+									continue
+								}
+								lasttags = append(lasttags, strings.TrimSpace(v))
+							}
+						}
 						//fmt.Println("[VAR:", lc[7:], "]")
 						invar = true
 						lcomment.Reset()
@@ -156,11 +177,13 @@ func extractall(inputfiles []string, mk, mv *[]string) {
 							// push everything
 							*mk = append(*mk, lvar.String())
 							*mv = append(*mv, lcontent.String())
+							*mtags = append(*mtags, lasttags)
 							invar = false
 							incomment = false
 							lvar.Reset()
 							lcontent.Reset()
 							lcomment.Reset()
+							lasttags = make([]string, 0)
 						} else {
 							incomment = false
 							lcomment.Reset()
