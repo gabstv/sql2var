@@ -128,7 +128,23 @@ func extractall(inputfiles []string, mk, mv *[]string) {
 					// parse if begin or end var
 					incomment = false
 					lc := strings.TrimSpace(lcomment.String())
-					if strings.HasPrefix(lc, "define:") && !invar {
+					if strings.HasPrefix(lc, "sql:") && invar {
+						skey := strings.TrimSpace(lc[4:])
+						cpk0 := *mk
+						cpv0 := *mv
+						found := false
+						for k := range cpk0 {
+							if cpk0[k] == skey {
+								lcontent.WriteString(cpv0[k])
+								found = true
+								break
+							}
+						}
+						if !found {
+							fmt.Println("key not found (sql:):", skey)
+						}
+						lcomment.Reset()
+					} else if strings.HasPrefix(lc, "define:") && !invar {
 						lvar.WriteString(lc[7:])
 						//fmt.Println("[VAR:", lc[7:], "]")
 						invar = true
