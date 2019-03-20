@@ -25,8 +25,6 @@ import (
 	"os"
 	"strings"
 
-	//"github.com/davecgh/go-spew/spew"
-
 	"github.com/mkideal/cli"
 )
 
@@ -68,7 +66,8 @@ func main() {
 		if args.Package == "" {
 			args.Package = os.Getenv("GOPACKAGE")
 		}
-		fmt.Println("PACKAGE", args.Package)
+		//fmt.Println("PACKAGE", args.Package)
+		fmt.Println(ctx.Color().Green("sql2var"), output)
 
 		ef, err := os.OpenFile(output, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 		if err != nil {
