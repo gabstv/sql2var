@@ -83,15 +83,25 @@ func main() {
 		eb.WriteString("\n\n")
 		for k := range sqlk {
 			skipit := false
+			isslice := false
 			if len(sqltags[k]) > 0 {
 				for _, vv := range sqltags[k] {
 					if vv == "skip" {
 						skipit = true
+						continue
+					}
+					if vv == "slice" {
+						isslice = true
+						continue
 					}
 				}
 			}
 			if !skipit {
-				eb.WriteString(fmt.Sprintf("const %s = %q\n", sqlk[k], sqlv[k]))
+				if isslice {
+					eb.WriteString(fmt.Sprintf("var %s = %s\n", sqlk[k], getslicecode(sqlv[k], "\n")))
+				} else {
+					eb.WriteString(fmt.Sprintf("const %s = %q\n", sqlk[k], sqlv[k]))
+				}
 			}
 		}
 		eb.Flush()
@@ -226,4 +236,25 @@ func extractall(inputfiles []string, mk, mv *[]string, mtags *[][]string) {
 			}
 		}
 	}
+}
+
+func getslicecode(raw, separator string) string {
+	items := strings.Split(raw, separator)
+	buf := new(bytes.Buffer)
+	buf.WriteString("[]string{")
+	nwritten := 0
+	for _, v := range items {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		if nwritten > 0 {
+			buf.WriteRune(',')
+			buf.WriteRune(' ')
+		}
+		buf.WriteString(fmt.Sprintf("%q", v))
+		nwritten++
+	}
+	buf.WriteRune('}')
+	return buf.String()
 }
