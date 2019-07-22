@@ -29,9 +29,10 @@ import (
 )
 
 type argT struct {
-	Inputs  []string `cli:"I" usage:"Input files"`
-	Output  string   `cli:"O" usage:"Output file"`
-	Package string   `cli:"P" usage:"Go Package"`
+	Inputs   []string `cli:"I" usage:"Input files"`
+	Output   string   `cli:"O" usage:"Output file"`
+	Package  string   `cli:"P" usage:"Go Package"`
+	SliceSep string   `cli:"s" usage:"Override slice separator (default ;)"`
 }
 
 func main() {
@@ -57,6 +58,10 @@ func main() {
 			}
 		} else {
 			source = os.Getenv("GOFILE")
+		}
+		slcsep := ";"
+		if args.SliceSep != "" {
+			slcsep = args.SliceSep
 		}
 		sqlk := make([]string, 0)
 		sqlv := make([]string, 0)
@@ -98,7 +103,7 @@ func main() {
 			}
 			if !skipit {
 				if isslice {
-					eb.WriteString(fmt.Sprintf("var %s = %s\n", sqlk[k], getslicecode(sqlv[k], "\n")))
+					eb.WriteString(fmt.Sprintf("var %s = %s\n", sqlk[k], getslicecode(sqlv[k], slcsep)))
 				} else {
 					eb.WriteString(fmt.Sprintf("const %s = %q\n", sqlk[k], sqlv[k]))
 				}
