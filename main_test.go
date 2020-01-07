@@ -35,7 +35,7 @@ ee "--" ff
 		return
 	}
 	fnm := f.Name()
-	f.Write([]byte(rawf))
+	_, _ = f.Write([]byte(rawf))
 	f.Close()
 	defer os.Remove(fnm)
 	extractall([]string{fnm}, &mk, &mv, &mtags)
